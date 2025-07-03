@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mix & Match Neon Calculator & Timer</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    html, body {
+      margin: 0; padding: 0; height: 100%;
+      overflow: hidden;
+      font-family: 'Segoe UI', sans-serif;
+      color: white;
+      background: radial-gradient(circle, #0f172a, #1e293b);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .stars {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100vw;
+      height: 100vh;
+      pointer-events: none;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .star {
+      position: absolute;
+      background: radial-gradient(circle, rgba(255, 215, 0, 0.8) 0%, rgba(255, 215, 0, 0) 70%);
+      border-radius: 50%;
+      opacity: 0.2;
+      animation: pulse 3s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 0.2; transform: translateY(0); }
+      50% { opacity: 0.6; transform: translateY(-4px); }
+    }
+
+    .container {
+      max-width: 1280px;
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      box-sizing: border-box;
+      z-index: 2;
+      padding: 0 1rem;
+      min-height: 400px;
+      max-height: 800px;
+      height: 70vh;
+    }
+
+    .panel {
+      flex-shrink: 0;
+      width: 600px;
+      background: rgba(17, 24, 39, 0.7);
+      border-radius: 1rem;
+      padding: 1rem 1.5rem;
+      box-sizing: border-box;
+      display: none;
+      flex-direction: column;
+      gap: 1rem;
+      box-shadow: 0 0 12px #8b5cf6cc, 0 0 24px #06b6d4aa;
+      color: #a5b4fc;
+      height: 100%;
+      backdrop-filter: blur(8px);
+      min-height: 0;
+    }
+
+    .panel.active {
+      display: flex;
+    }
+
+    .panel.hiding {
+  opacity: 0;
+  transform: scale(0.97);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+
+    .toggle-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      z-index: 10;
+    }
+
+    .toggle-buttons button {
+      background: #1e293b;
+      border: 1px solid #7c3aed;
+      color: #a5b4fc;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 0 8px #7c3aed;
+      transition: background-color 0.3s ease;
+    }
+
+    .toggle-buttons button:hover {
+      background: #7c3aed;
+      color: white;
+    }
+
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      text-align: center;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.5rem 1rem;
+      flex-grow: 1;
+      overflow-y: auto;
+      min-height: 0;
+    }
+
+    form > div {
+      display: flex;
+      flex-direction: column;
+    }
+
+    label {
+      font-weight: 600;
+      font-size: 0.875rem;
+      margin-bottom: 0.15rem;
+      display: flex;
+      justify-content: space-between;
+      color: #a5b4fc;
+    }
+
+    .max-value {
+      font-weight: 400;
+      opacity: 0.7;
+      font-size: 0.75rem;
+    }
+
+    input[type=number] {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid #334155;
+      color: #a5b4fc;
+      padding: 6px 8px;
+      border-radius: 0.375rem;
+      font-size: 0.875rem;
+      height: 32px;
+      outline-offset: 2px;
+      outline-color: #7c3aed;
+      transition: outline-color 0.3s ease;
+    }
+
+    input[type=number]:focus {
+      outline-color: #a78bfa;
+    }
+
+    #result {
+      grid-column: 1 / -1;
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-top: 0.75rem;
+      color: #4ade80;
+      text-align: center;
+    }
+
+    #illegal {
+      grid-column: 1 / -1;
+      color: #f87171;
+      font-weight: 700;
+      font-size: 0.9rem;
+      text-align: center;
+      min-height: 1.2rem;
+      margin-top: 0.25rem;
+    }
+
+    .timer-display {
+      font-size: 3rem;
+      font-weight: 700;
+      text-align: center;
+      color: #a5b4fc;
+      user-select: none;
+      text-shadow: 0 0 10px #8b5cf6;
+      flex-grow: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 0;
+    }
+
+    .timer-controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    button.timer-btn {
+      background: #1e293b;
+      border: 1px solid #7c3aed;
+      color: #a5b4fc;
+      padding: 0.5rem 1rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      cursor: pointer;
+      box-shadow: 0 0 10px #7c3aed;
+      transition: background-color 0.3s ease;
+    }
+
+    button.timer-btn:hover {
+      background: #7c3aed;
+      color: white;
+    }
+
+    @media (max-width: 480px) {
+  form {
+    grid-template-columns: 1fr;
+  }
+}
+
+  </style>
+</head>
+<body>
+
+  <div class="stars" aria-hidden="true"></div>
+
+  <div class="toggle-buttons">
+    <button onclick="togglePanel('calculator')"> Calculator</button>
+    <button onclick="togglePanel('timer')"> Timer</button>
+  </div>
+
+  <div class="container">
+    <!-- Calculator Panel -->
+    <div class="panel" id="calculator-panel">
+      <h1>Mix & Match Score Calculator</h1>
+      <form id="calc-form">
+        <div><label for="pins">Pins <span class="max-value">Max: 34</span></label><input type="number" id="pins" min="0" max="34" value="0"></div>
+        <div><label for="beams">Beams <span class="max-value">Max: 2</span></label><input type="number" id="beams" min="0" max="2" value="0"></div>
+        <div><label for="stacks2">2-Color Stacks <span class="max-value">Max: 17</span></label><input type="number" id="stacks2" min="0" max="17" value="0"></div>
+        <div><label for="stacks3">3-Color Stacks <span class="max-value">Max: 11</span></label><input type="number" id="stacks3" min="0" max="11" value="0"></div>
+        <div><label for="bonus1">Matching/Beam Bonus <span class="max-value">Max: 17</span></label><input type="number" id="bonus1" min="0" max="17" value="0"></div>
+        <div><label for="bonus2">Standoff Bonus <span class="max-value">Max: 3</span></label><input type="number" id="bonus2" min="0" max="3" value="0"></div>
+        <div><label for="cleared">Cleared Pegs <span class="max-value">Max: 4</span></label><input type="number" id="cleared" min="0" max="4" value="0"></div>
+        <div><label for="contact">Touching Robots <span class="max-value">Max: 2</span></label><input type="number" id="contact" min="0" max="2" value="0"></div>
+        <div id="result">Total Score: 0 pts</div>
+        <div id="illegal"></div>
+      </form>
+    </div>
+
+    <!-- Timer Panel -->
+    <div class="panel" id="timer-panel">
+      <h1>Countdown Timer</h1>
+      <div class="timer-display" id="timer-display">01:00</div>
+      <div class="timer-controls">
+        <button class="timer-btn" id="start-btn">Start</button>
+        <button class="timer-btn" id="pause-btn" disabled>Pause</button>
+        <button class="timer-btn" id="reset-btn">Reset</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Panel toggle logic
+    function togglePanel(type) {
+      document.getElementById('calculator-panel').classList.remove('active');
+      document.getElementById('timer-panel').classList.remove('active');
+      if (type === 'calculator') {
+        document.getElementById('calculator-panel').classList.add('active');
+      } else {
+        document.getElementById('timer-panel').classList.add('active');
+      }
+    }
+    togglePanel('calculator'); // default
+
+    // Calculator logic
+    const points = {
+      pins: 1,
+      beams: 10,
+      stacks2: 5,
+      stacks3: 15,
+      bonus1: 10,
+      bonus2: 10,
+      cleared: 2,
+      contact: 2,
+    };
+    const maxes = {
+      pins: 34, beams: 2, stacks2: 17, stacks3: 11,
+      bonus1: 17, bonus2: 3, cleared: 4, contact: 2
+    };
+    const inputs = Object.keys(points);
+
+    function clampInputs() {
+      inputs.forEach(id => {
+        const el = document.getElementById(id);
+        if (el) {
+          let val = parseInt(el.value) || 0;
+          val = Math.min(Math.max(val, 0), maxes[id]);
+          el.value = val;
+        }
+      });
+    }
+
+    function calculateScore() {
+      clampInputs();
+      const values = {};
+      let total = 0;
+      inputs.forEach(id => {
+        const val = parseInt(document.getElementById(id).value) || 0;
+        values[id] = val;
+        total += val * points[id];
+      });
+      document.getElementById("result").textContent = `Total Score: ${total} pts`;
+
+      const totalStacks = values.stacks2 + values.stacks3;
+      const totalPinsUsed = values.beams + values.stacks2 * 2 + values.stacks3 * 3;
+      let illegalMsg = "";
+      if (totalStacks > 34) {
+        illegalMsg = "Warning: Total stacks exceed max allowed (34).";
+      } else if (totalPinsUsed > 34) {
+        illegalMsg = "Warning: Total pin usage exceeds available 34 pins.";
+      }
+      document.getElementById("illegal").textContent = illegalMsg;
+    }
+
+    inputs.forEach(id => {
+      document.getElementById(id).addEventListener("input", calculateScore);
+    });
+
+    calculateScore();
+
+    // Timer logic
+    const AudioContext = window.AudioContext || window.webkitAudioContext;
+    const audioCtx = new AudioContext();
+    const timerDisplay = document.getElementById('timer-display');
+    const startBtn = document.getElementById('start-btn');
+    const pauseBtn = document.getElementById('pause-btn');
+    const resetBtn = document.getElementById('reset-btn');
+    const countdownTime = 60;
+    let timerInterval = null;
+    let remainingTime = countdownTime;
+    let isRunning = false;
+
+    function formatTime(seconds) {
+      const m = Math.floor(seconds / 60).toString().padStart(2, '0');
+      const s = (seconds % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    function updateDisplay() {
+      timerDisplay.textContent = formatTime(remainingTime);
+    }
+
+    function tick() {
+      if (remainingTime > 0) {
+        remainingTime--;
+        updateDisplay();
+      } else {
+        clearInterval(timerInterval);
+        isRunning = false;
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+      }
+    }
+
+    startBtn.addEventListener('click', () => {
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      if (!isRunning) {
+        timerInterval = setInterval(tick, 1000);
+        isRunning = true;
+        startBtn.disabled = true;
+        pauseBtn.disabled = false;
+      }
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      isRunning = false;
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+    });
+
+    resetBtn.addEventListener('click', () => {
+      clearInterval(timerInterval);
+      isRunning = false;
+      remainingTime = countdownTime;
+      updateDisplay();
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+    });
+
+    updateDisplay();
+
+    // Stars generator
+    const starsContainer = document.querySelector('.stars');
+    const starCount = 60;
+    for (let i = 0; i < starCount; i++) {
+      const star = document.createElement('div');
+      star.classList.add('star');
+      const size = Math.random() * 4 + 3;
+      star.style.width = `${size}px`;
+      star.style.height = `${size}px`;
+      star.style.top = `${Math.random() * 100}vh`;
+      star.style.left = `${Math.random() * 100}vw`;
+      star.style.animationDelay = `${Math.random() * 3}s`;
+      starsContainer.appendChild(star);
+    }
+  </script>
+<!-- Code injected by live-server -->
+<script>
+	// <![CDATA[  <-- For SVG support
+	if ('WebSocket' in window) {
+		(function () {
+			function refreshCSS() {
+				var sheets = [].slice.call(document.getElementsByTagName("link"));
+				var head = document.getElementsByTagName("head")[0];
+				for (var i = 0; i < sheets.length; ++i) {
+					var elem = sheets[i];
+					var parent = elem.parentElement || head;
+					parent.removeChild(elem);
+					var rel = elem.rel;
+					if (elem.href && typeof rel != "string" || rel.length == 0 || rel.toLowerCase() == "stylesheet") {
+						var url = elem.href.replace(/(&|\?)_cacheOverride=\d+/, '');
+						elem.href = url + (url.indexOf('?') >= 0 ? '&' : '?') + '_cacheOverride=' + (new Date().valueOf());
+					}
+					parent.appendChild(elem);
+				}
+			}
+			var protocol = window.location.protocol === 'http:' ? 'ws://' : 'wss://';
+			var address = protocol + window.location.host + window.location.pathname + '/ws';
+			var socket = new WebSocket(address);
+			socket.onmessage = function (msg) {
+				if (msg.data == 'reload') window.location.reload();
+				else if (msg.data == 'refreshcss') refreshCSS();
+			};
+			if (sessionStorage && !sessionStorage.getItem('IsThisFirstTime_Log_From_LiveServer')) {
+				console.log('Live reload enabled.');
+				sessionStorage.setItem('IsThisFirstTime_Log_From_LiveServer', true);
+			}
+		})();
+	}
+	else {
+		console.error('Upgrade your browser. This Browser is NOT supported WebSocket for Live-Reloading.');
+	}
+	// ]]>
+</script>
+</body>
+</html>
