@@ -1,283 +1,837 @@
-<!-- Save this as index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>VEX Scoring Dashboard</title>
-  <style>
-    /* All CSS goes here. If you want this split later again, just ask! */
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: 'Segoe UI', sans-serif;
-      color: white;
-      background-color: #0f0f0f;
-      overflow: hidden;
-    }
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>VEX IQ Scoring Dashboard</title>
+<style>
+  /* === Reset & General Styles === */
+  * {
+    box-sizing: border-box;
+  }
+  html, body {
+    margin: 0; padding: 0;
+    font-family: 'Segoe UI', sans-serif;
+    background: #0f0f0f;
+    color: white;
+    height: 100%;
+    overflow: hidden;
+  }
+  h1, h2, h3 {
+    margin: 0;
+  }
+  h1 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+  }
+  h2 {
+    margin-bottom: 0.5rem;
+  }
+  p {
+    margin: 0.3rem 0;
+  }
 
-    .app-layout {
-      display: flex;
-      height: 100vh;
-      overflow: hidden;
-    }
+  /* === Layout === */
+  .app-layout {
+    display: flex;
+    height: 100vh;
+  }
+  .sidebar {
+    width: 200px;
+    background: #181818;
+    display: flex;
+    flex-direction: column;
+    padding-top: 1rem;
+    border-right: 1px solid #333;
+    user-select: none;
+  }
+  .tab-btn {
+    background: none;
+    border: none;
+    color: white;
+    text-align: left;
+    padding: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-left: 4px solid transparent;
+    outline-offset: 2px;
+  }
+  .tab-btn:hover,
+  .tab-btn.active {
+    background: #222;
+    border-left: 4px solid #4ade80;
+  }
+  .container {
+    flex-grow: 1;
+    overflow: auto;
+    padding: 2rem;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+  }
+  .panel {
+    display: none;
+    flex-direction: column;
+    width: 100%;
+    max-width: 1000px;
+    padding: 2rem;
+    background: #181818;
+    border-radius: 1rem;
+    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+  }
+  .panel.active {
+    display: flex;
+  }
 
+  /* === Dashboard === */
+  .dashboard-welcome {
+    text-align: center;
+    color: #4ade80;
+    font-size: 1.3rem;
+    font-weight: 600;
+    margin-bottom: 1.5rem;
+    user-select: none;
+  }
+  .dashboard-cards {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* 2 columns */
+    grid-template-rows: repeat(2, 1fr);    /* 2 rows */
+    gap: 1.5rem;
+    max-width: 900px;
+    width: 100%;
+    height: 400px; /* Fixed height for even spacing */
+    margin: 0 auto;
+  }
+  .dashboard-card {
+    background: #222;
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 0 8px rgba(74, 222, 128, 0.5);
+    color: #c8f5c2;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    user-select: none;
+    transition: box-shadow 0.3s ease;
+  }
+  .dashboard-card h3 {
+    margin-bottom: 0.5rem;
+    color: #4ade80;
+    text-align: center;
+  }
+  .dashboard-card:hover {
+    box-shadow: 0 0 12px rgba(74, 222, 128, 0.9);
+  }
+
+  /* === Tips === */
+  #tips-text {
+    margin-top: 0.5rem;
+    font-size: 1rem;
+  }
+
+  /* === Calculator === */
+  #calculator-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: nowrap;
+    user-select: none;
+  }
+  #calculator-header h1 {
+    flex-grow: 1;
+    margin: 0;
+  }
+  #result {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #4ade80;
+    white-space: nowrap;
+    margin-top: 3px;
+    user-select: none;
+  }
+  #list-toggle-btn {
+    background: #4ade80;
+    color: #181818;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.3rem 0.8rem;
+    font-weight: 700;
+    cursor: pointer;
+    user-select: none;
+    flex-shrink: 0;
+  }
+  #list-toggle-btn:hover {
+    background: #86efac;
+  }
+  #save-score-btn {
+    padding: 0.3rem 0.7rem;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 0.5rem;
+    border: 1px solid #4ade80;
+    background-color: #181818;
+    color: #4ade80;
+    transition: background-color 0.3s ease;
+    margin-left: auto;
+    user-select: none;
+  }
+  #save-score-btn:hover:not(:disabled) {
+    background-color: #4ade80;
+    color: #181818;
+  }
+  #save-score-btn:disabled {
+    opacity: 0.5;
+    cursor: default;
+  }
+  form {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1rem;
+    max-height: 60vh;
+    overflow-y: auto;
+  }
+  form > div {
+    display: flex;
+    flex-direction: column;
+    user-select: none;
+  }
+  label {
+    font-weight: 600;
+    font-size: 0.875rem;
+    margin-bottom: 0.25rem;
+    color: #ddd;
+    display: flex;
+    justify-content: space-between;
+  }
+  .max-value {
+    font-weight: 400;
+    opacity: 0.6;
+    font-size: 0.75rem;
+  }
+  input[type=number] {
+    background: #111;
+    border: 1px solid #333;
+    color: white;
+    padding: 6px 8px;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    height: 32px;
+    outline: none;
+    transition: border-color 0.3s ease;
+  }
+  input[type=number]:focus {
+    border-color: #888;
+  }
+  #illegal {
+    grid-column: 1 / -1;
+    color: #f87171;
+    font-weight: 700;
+    font-size: 0.9rem;
+    text-align: center;
+    min-height: 1.2rem;
+    margin-top: 0.25rem;
+    user-select: none;
+  }
+
+  /* === Score Lists === */
+  #score-list-container {
+    display: flex;
+    justify-content: space-between;
+    gap: 2rem;
+    margin-top: 1rem;
+    flex-wrap: wrap;
+  }
+  #skills-list, #teamwork-list {
+    flex: 1 1 45%;
+    max-height: 300px;
+    overflow-y: auto;
+    background: #222;
+    border-radius: 0.5rem;
+    padding: 1rem;
+    box-sizing: border-box;
+    color: #ccc;
+    user-select: none;
+  }
+  #skills-list h2, #teamwork-list h2 {
+    margin-top: 0;
+    color: #4ade80;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  #skills-list h2 button, #teamwork-list h2 button {
+    background: #4ade80;
+    color: #181818;
+    border: none;
+    border-radius: 0.4rem;
+    font-size: 0.8rem;
+    padding: 0.15rem 0.5rem;
+    cursor: pointer;
+    font-weight: 600;
+    user-select: none;
+    transition: background-color 0.3s ease;
+  }
+  #skills-list h2 button:hover, #teamwork-list h2 button:hover {
+    background: #86efac;
+  }
+  ul.score-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    max-height: 250px;
+    overflow-y: auto;
+  }
+  ul.score-items li {
+    margin-bottom: 0.3rem;
+    cursor: default;
+  }
+  ul.score-items li.gold {
+    color: gold;
+    font-weight: 700;
+  }
+  ul.score-items li.silver {
+    color: silver;
+    font-weight: 700;
+  }
+  ul.score-items li.bronze {
+    color: #cd7f32;
+    font-weight: 700;
+  }
+
+  /* === Timer === */
+  .timer-section {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border: 1px solid #333;
+    background: #202020;
+    border-radius: 1rem;
+    padding: 2rem 3rem;
+    min-width: 280px;
+    box-sizing: border-box;
+    user-select: none;
+    width: 100%;
+    max-width: 400px;
+    margin: 0 auto;
+  }
+  .timer-display {
+    font-size: 4rem;
+    font-weight: 700;
+    color: white;
+    margin-bottom: 1rem;
+    text-align: center;
+    white-space: nowrap;
+    user-select: none;
+  }
+  .timer-controls {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    justify-content: center;
+  }
+  button.timer-btn {
+    background: #111;
+    border: 1px solid #333;
+    color: white;
+    padding: 0.6rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    font-size: 1rem;
+    user-select: none;
+    flex: 1;
+  }
+  button.timer-btn:hover:not(:disabled) {
+    background: #333;
+  }
+  button.timer-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+  }
+
+  /* === Responsive === */
+  @media (max-width: 768px) {
     .sidebar {
-      width: 200px;
-      background: #181818;
-      border-right: 1px solid #333;
-      display: flex;
-      flex-direction: column;
-      padding: 1rem 0;
-    }
-
-    .tab-btn {
-      background: none;
-      border: none;
-      color: white;
-      padding: 1rem 1.5rem;
-      text-align: left;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s ease;
-      border-left: 4px solid transparent;
-      user-select: none;
-    }
-
-    .tab-btn:hover,
-    .tab-btn.active {
-      background: #222;
-      border-left: 4px solid #4ade80;
-    }
-
-    .container {
-      flex-grow: 1;
-      overflow: auto;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
-      padding: 2rem;
-      box-sizing: border-box;
-    }
-
-    .panel {
+      flex-direction: row;
       width: 100%;
-      max-width: 1000px;
-      background: #181818;
-      border-radius: 1rem;
-      padding: 2rem;
-      box-sizing: border-box;
-      display: none;
-      flex-direction: column;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
+      border-right: none;
+      border-bottom: 1px solid #333;
+      overflow-x: auto;
     }
-
-    .panel.active {
-      display: flex;
-    }
-
-    h1 {
-      font-size: 1.75rem;
-      margin: 0 0 1rem;
-      color: white;
-      user-select: none;
-      text-align: center;
-    }
-
-    /* Dashboard */
-    .dashboard-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 2rem;
-    }
-
-    .dashboard-card {
-      background: #111;
-      border-radius: 1rem;
-      padding: 1.5rem;
-      box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      text-align: center;
-    }
-
-    .card-title {
-      font-size: 1rem;
-      font-weight: bold;
-      margin-bottom: 0.5rem;
-      color: #ccc;
-    }
-
-    .card-value {
-      font-size: 2rem;
-      font-weight: 700;
-      color: #4ade80;
-    }
-
-    .tip-card {
-      height: 100px;
-      justify-content: center;
-    }
-
-    /* Score Lists */
-    .score-lists {
-      display: flex;
-      justify-content: space-between;
-      gap: 2rem;
-      margin-top: 2rem;
-    }
-
-    .score-box {
+    .tab-btn {
       flex: 1;
-      background: #111;
-      border-radius: 1rem;
-      padding: 1rem;
-      max-height: 300px;
-      overflow-y: auto;
-    }
-
-    .score-box h3 {
-      margin-top: 0;
-      color: white;
       text-align: center;
+      border-left: none;
+      border-bottom: 4px solid transparent;
     }
-
-    .score-box ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      color: #ccc;
+    .tab-btn.active {
+      border-bottom: 4px solid #4ade80;
     }
-
-    .score-box li {
-      padding: 0.25rem 0;
+    form {
+      grid-template-columns: 1fr 1fr;
+      max-height: none;
     }
+    #score-list-container {
+      flex-direction: column;
+    }
+    #skills-list, #teamwork-list {
+      flex-basis: 100%;
+      max-height: 200px;
+    }
+    .timer-section {
+      max-width: 100%;
+      padding: 1.5rem;
+    }
+    .timer-display {
+      font-size: 3rem;
+    }
+    .timer-controls {
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+    button.timer-btn {
+      width: 100%;
+    }
+    .dashboard-cards {
+      height: auto;
+      grid-template-columns: 1fr;
+      grid-template-rows: auto;
+    }
+  }
 
-    .gold { color: gold; font-weight: 700; }
-    .silver { color: silver; font-weight: 700; }
-    .bronze { color: #cd7f32; font-weight: 700; }
-  </style>
+  
+</style>
 </head>
 <body>
-  <div class="app-layout">
-    <nav class="sidebar">
-      <button class="tab-btn active" onclick="switchTab('dashboard')">Dashboard</button>
-      <button class="tab-btn" onclick="switchTab('calculator')">Calculator</button>
-      <button class="tab-btn" onclick="switchTab('timer')">Timer</button>
-      <button class="tab-btn" onclick="switchTab('scores')">Scores</button>
-    </nav>
-    <div class="container">
-      <section id="dashboard" class="panel active">
-        <h1>Scoring Dashboard</h1>
-        <div class="dashboard-grid">
-          <div class="dashboard-card">
-            <div class="card-title">Best Skills Score</div>
-            <div class="card-value" id="best-skills">—</div>
-          </div>
-          <div class="dashboard-card">
-            <div class="card-title">Best Teamwork Score</div>
-            <div class="card-value" id="best-teamwork">—</div>
-          </div>
-          <div class="dashboard-card">
-            <div class="card-title">Most Recent Score</div>
-            <div class="card-value" id="recent-score">—</div>
-          </div>
-          <div class="dashboard-card tip-card">
-            <div class="card-title">Tip of the Day</div>
-            <div class="card-value" id="tip-text">Loading...</div>
-          </div>
-        </div>
-      </section>
 
-      <section id="calculator" class="panel">
-        <h1>Score Calculator</h1>
-        <!-- Insert your calculator content here -->
-      </section>
 
-      <section id="timer" class="panel">
-        <h1>Timer</h1>
-        <!-- Insert your timer content here -->
-      </section>
 
-      <section id="scores" class="panel">
-        <h1>Saved Scores</h1>
-        <div class="score-lists">
-          <div class="score-box">
-            <h3>Skills</h3>
-            <ul id="skills-list"><li>No scores saved.</li></ul>
-          </div>
-          <div class="score-box">
-            <h3>Teamwork</h3>
-            <ul id="teamwork-list"><li>No scores saved.</li></ul>
-          </div>
-        </div>
-      </section>
-    </div>
+<div class="app-layout" role="main" aria-hidden="true" tabindex="-1">
+  <!-- Sidebar Navigation -->
+  <nav class="sidebar" role="tablist" aria-label="Main navigation tabs">
+    <button class="tab-btn active" role="tab" aria-selected="true" aria-controls="dashboard" id="tab-dashboard" onclick="switchTab('dashboard')">Dashboard</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="calculator" id="tab-calculator" onclick="switchTab('calculator')">Calculator</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="timer" id="tab-timer" onclick="switchTab('timer')">Timer</button>
+    <button class="tab-btn" role="tab" aria-selected="false" aria-controls="scores" id="tab-scores" onclick="switchTab('scores')">Scores</button>
+    
+  </nav>
+
+  <!-- Main Content -->
+  <div class="container">
+    <!-- Dashboard -->
+    <section id="dashboard" class="panel active" role="tabpanel" aria-labelledby="tab-dashboard" tabindex="0">
+      <div class="dashboard-welcome">Dashboard</div>
+      <div class="dashboard-cards" role="region" aria-label="Dashboard summary cards">
+        <article class="dashboard-card" tabindex="0">
+          <h3>Latest Score</h3>
+          <p id="latest-score">No recent score.</p>
+        </article>
+        <article class="dashboard-card" tabindex="0">
+          <h3>Best Teamwork Score</h3>
+          <p id="best-teamwork">No score saved yet.</p>
+        </article>
+        <article class="dashboard-card" tabindex="0">
+          <h3>Best Skills Score</h3>
+          <p id="best-skills">No score saved yet.</p>
+        </article>
+        <article class="dashboard-card" tabindex="0" id="tips-card">
+          <h3>Tips</h3>
+          <p id="tips-text">Only 6 Motors</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- Calculator -->
+    <!-- Updated Calculator section -->
+<section id="calculator" class="panel" role="tabpanel" aria-labelledby="tab-calculator" tabindex="0" aria-live="polite">
+  <div id="calculator-header">
+    <h1>Score Calculator</h1>
+    <div id="result" aria-live="polite" aria-atomic="true">Total Score: 0 pts</div>
+    <button type="button" id="list-toggle-btn" aria-label="Toggle between Skills and Teamwork list">Skills</button>
+    <button type="button" id="save-score-btn" class="timer-btn" aria-label="Save current score" disabled>Save Score</button>
   </div>
+  <form id="calc-form" aria-label="Score calculator form">
+    <div>
+      <label for="pins">Connected Pins  <span class="max-value">Max: 34</span></label>
+      <input type="number" id="pins" min="0" max="34" value="0" />
+    </div>
+    <div>
+      <label for="beams">Connected Beams  <span class="max-value">Max: 2</span></label>
+      <input type="number" id="beams" min="0" max="2" value="0" />
+    </div>
+    <div>
+      <label for="stacks2">2-Color Stacks <span class="max-value">Max: 17</span></label>
+      <input type="number" id="stacks2" min="0" max="17" value="0" />
+    </div>
+    <div>
+      <label for="stacks3">3-Color Stacks <span class="max-value">Max: 11</span></label>
+      <input type="number" id="stacks3" min="0" max="11" value="0" />
+    </div>
+    <div>
+      <label for="bonus1">Stacks Scored <span class="max-value">Max: 17</span></label>
+      <input type="number" id="bonus1" min="0" max="17" value="0" />
+    </div>
+    <div>
+      <label for="bonus2">Stacks Scored on Standoff  <span class="max-value">Max: 3</span></label>
+      <input type="number" id="bonus2" min="0" max="3" value="0" />
+    </div>
+    <div>
+      <label for="startingPinsCleared">Cleared Starting Pins <span class="max-value">Max: 4</span></label>
+      <input type="number" id="startingPinsCleared" min="0" max="4" value="0" />
+    </div>
+    <div>
+      <label for="robotsTouched">Robots Touching Objects <span class="max-value">Max: 2</span></label>
+      <input type="number" id="robotsTouched" min="0" max="2" value="0" />
+    </div>
+    <div id="illegal" role="alert" aria-live="assertive"></div>
+  </form>
+</section>
 
-  <script>
-    const tabs = ['dashboard', 'calculator', 'timer', 'scores'];
-    function switchTab(name) {
-      tabs.forEach(id => {
-        document.getElementById(id).classList.toggle('active', id === name);
-      });
+
+    <!-- Timer -->
+    <section id="timer" class="panel" role="tabpanel" aria-labelledby="tab-timer" tabindex="0" aria-live="polite">
+      <div class="timer-section">
+        <div id="timer-display" class="timer-display" aria-live="assertive" aria-atomic="true">01:00</div>
+        <div class="timer-controls">
+          <button id="start-btn" class="timer-btn" aria-label="Start Timer">Start</button>
+          <button id="pause-btn" class="timer-btn" aria-label="Pause Timer" disabled>Pause</button>
+          <button id="reset-btn" class="timer-btn" aria-label="Reset Timer">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Scores List -->
+    <section id="scores" class="panel" role="tabpanel" aria-labelledby="tab-scores" tabindex="0" aria-live="polite">
+      <div id="score-list-container">
+        <section id="skills-list" aria-label="Skills scores list">
+          <h2>Skills Scores <button type="button" id="clear-skills-btn" aria-label="Clear all skills scores">Clear</button></h2>
+          <ul class="score-items" id="skills-scores-list" tabindex="0"></ul>
+        </section>
+        <section id="teamwork-list" aria-label="Teamwork scores list">
+          <h2>Teamwork Scores <button type="button" id="clear-teamwork-btn" aria-label="Clear all teamwork scores">Clear</button></h2>
+          <ul class="score-items" id="teamwork-scores-list" tabindex="0"></ul>
+        </section>
+      </div>
+    </section>
+  </div>
+</div>
+
+
+ <script>
+  // --- Tab switching ---
+const tabs = ['dashboard', 'calculator', 'timer', 'scores'];
+function switchTab(tabId) {
+  tabs.forEach(id => {
+    const tabBtn = document.getElementById('tab-' + id);
+    const panel = document.getElementById(id);
+    if (id === tabId) {
+      tabBtn.classList.add('active');
+      tabBtn.setAttribute('aria-selected', 'true');
+      panel.classList.add('active');
+      panel.setAttribute('tabindex', '0');
+      panel.focus();
+    } else {
+      tabBtn.classList.remove('active');
+      tabBtn.setAttribute('aria-selected', 'false');
+      panel.classList.remove('active');
+      panel.setAttribute('tabindex', '-1');
     }
+  });
+}
 
-    // Tip rotation
-    const tips = [
-      "Only 6 Motors",
-      "Make Sure Your Bot Is Sturdy",
-      "Robot Ideas: 180 Mech, Conveyor, Pinhead With Mods"
-    ];
-    let tipIndex = 0;
-    const tipText = document.getElementById("tip-text");
-    function rotateTips() {
-      tipText.textContent = tips[tipIndex];
-      tipIndex = (tipIndex + 1) % tips.length;
+// --- Calculator and Scoring Logic ---
+const maxValues = {
+  pins: 34,
+  beams: 2,
+  stacks2: 17,
+  stacks3: 11,
+  bonus1: 17,
+  bonus2: 3,
+  startingPinsCleared: 4,
+  robotsTouched: 2
+};
+
+const form = document.getElementById('calc-form');
+const inputs = {
+  pins: document.getElementById('pins'),
+  beams: document.getElementById('beams'),
+  stacks2: document.getElementById('stacks2'),
+  stacks3: document.getElementById('stacks3'),
+  bonus1: document.getElementById('bonus1'),
+  bonus2: document.getElementById('bonus2'),
+  startingPinsCleared: document.getElementById('startingPinsCleared'),
+  robotsTouched: document.getElementById('robotsTouched')
+};
+const illegalMsg = document.getElementById('illegal');
+const resultDisplay = document.getElementById('result');
+const saveScoreBtn = document.getElementById('save-score-btn');
+const listToggleBtn = document.getElementById('list-toggle-btn');
+
+let currentList = 'skills';
+let skillsScores = [];
+let teamworkScores = [];
+
+// Tips cycling
+const tips = [
+  "Only 6 Motors",
+  "Clear starting pins for 2 easy points",
+  "Save scores to track performance",
+  "Bots: 180, Conveyor, Pinhead",
+];
+let tipIndex = 0;
+const tipsText = document.getElementById('tips-text');
+function cycleTips() {
+  tipIndex = (tipIndex + 1) % tips.length;
+  tipsText.textContent = tips[tipIndex];
+}
+setInterval(cycleTips, 5000);
+
+// Input sanitizing and validation
+function sanitizeInput(input, max) {
+  let val = parseInt(input.value, 10);
+  if (isNaN(val) || val < 0) val = 0;
+  if (val > max) val = max;
+  input.value = val;
+  return val;
+}
+
+function calculateScore() {
+  const pins = sanitizeInput(inputs.pins, maxValues.pins);
+  const beams = sanitizeInput(inputs.beams, maxValues.beams);
+  const stacks2 = sanitizeInput(inputs.stacks2, maxValues.stacks2);
+  const stacks3 = sanitizeInput(inputs.stacks3, maxValues.stacks3);
+  const bonus1 = sanitizeInput(inputs.bonus1, maxValues.bonus1);
+  const bonus2 = sanitizeInput(inputs.bonus2, maxValues.bonus2);
+  const startingPinsCleared = sanitizeInput(inputs.startingPinsCleared, maxValues.startingPinsCleared);
+  const robotsTouched = sanitizeInput(inputs.robotsTouched, maxValues.robotsTouched);
+
+  if (
+    pins < 0 || beams < 0 || stacks2 < 0 || stacks3 < 0 ||
+    bonus1 < 0 || bonus2 < 0 || startingPinsCleared < 0 || robotsTouched < 0
+  ) {
+    illegalMsg.textContent = 'Inputs cannot be negative.';
+    saveScoreBtn.disabled = true;
+    return 0;
+  }
+  if (
+    pins > maxValues.pins || beams > maxValues.beams || stacks2 > maxValues.stacks2 ||
+    stacks3 > maxValues.stacks3 || bonus1 > maxValues.bonus1 || bonus2 > maxValues.bonus2 ||
+    startingPinsCleared > maxValues.startingPinsCleared || robotsTouched > maxValues.robotsTouched
+  ) {
+    illegalMsg.textContent = 'Input exceeds maximum allowed value.';
+    saveScoreBtn.disabled = true;
+    return 0;
+  }
+  if (stacks2 + stacks3 > 17) {
+    illegalMsg.textContent = 'Total stacks (2-color + 3-color) cannot exceed 17.';
+    saveScoreBtn.disabled = true;
+    return 0;
+  }
+
+  illegalMsg.textContent = '';
+  const score =
+    pins * 1 +
+    beams * 10 +
+    stacks2 * 5 +
+    stacks3 * 15 +
+    bonus1 * 10 +
+    bonus2 * 10 +
+    startingPinsCleared * 2 +
+    robotsTouched * 2;
+
+  saveScoreBtn.disabled = false;
+  return score;
+}
+
+function updateScoreText() {
+  const score = calculateScore();
+  resultDisplay.textContent = score === 1 ? `Total Score: ${score} pt` : `Total Score: ${score} pts`;
+}
+
+Object.values(inputs).forEach(input => {
+  input.addEventListener('input', updateScoreText);
+  input.addEventListener('change', updateScoreText);
+});
+updateScoreText();
+
+saveScoreBtn.addEventListener('click', () => {
+  if (saveScoreBtn.disabled) return;
+  const score = calculateScore();
+  if (currentList === 'skills') {
+    skillsScores.push(score);
+  } else {
+    teamworkScores.push(score);
+  }
+
+  saveScoreBtn.disabled = true; // moved before reset
+
+  updateScoreLists();
+  updateDashboardCards();
+  resetForm();
+
+  const loggedInUser = sessionStorage.getItem('vexLoggedInUser');
+  if (loggedInUser) saveUserData(loggedInUser);
+});
+
+function resetForm() {
+  Object.values(inputs).forEach(input => input.value = 0);
+  illegalMsg.textContent = '';
+  updateScoreText();
+}
+
+const skillsList = document.getElementById('skills-scores-list');
+const teamworkList = document.getElementById('teamwork-scores-list');
+
+function formatScore(score) {
+  return score === 1 ? `${score} pt` : `${score} pts`;
+}
+
+function updateScoreLists() {
+  skillsList.innerHTML = '';
+  if (skillsScores.length === 0) {
+    skillsList.innerHTML = '<li>No skills scores saved.</li>';
+  } else {
+    skillsScores.slice().sort((a, b) => b - a).forEach((score, i) => {
+      const li = document.createElement('li');
+      li.textContent = formatScore(score);
+      if (i === 0) li.classList.add('gold');
+      else if (i === 1) li.classList.add('silver');
+      else if (i === 2) li.classList.add('bronze');
+      skillsList.appendChild(li);
+    });
+  }
+
+  teamworkList.innerHTML = '';
+  if (teamworkScores.length === 0) {
+    teamworkList.innerHTML = '<li>No teamwork scores saved.</li>';
+  } else {
+    teamworkScores.slice().sort((a, b) => b - a).forEach((score, i) => {
+      const li = document.createElement('li');
+      li.textContent = formatScore(score);
+      if (i === 0) li.classList.add('gold');
+      else if (i === 1) li.classList.add('silver');
+      else if (i === 2) li.classList.add('bronze');
+      teamworkList.appendChild(li);
+    });
+  }
+}
+
+document.getElementById('clear-skills-btn').addEventListener('click', () => {
+  if (confirm('Clear all skills scores? This cannot be undone.')) {
+    skillsScores = [];
+    updateScoreLists();
+    updateDashboardCards();
+    const loggedInUser = sessionStorage.getItem('vexLoggedInUser');
+    if (loggedInUser) saveUserData(loggedInUser);
+  }
+});
+
+document.getElementById('clear-teamwork-btn').addEventListener('click', () => {
+  if (confirm('Clear all teamwork scores? This cannot be undone.')) {
+    teamworkScores = [];
+    updateScoreLists();
+    updateDashboardCards();
+    const loggedInUser = sessionStorage.getItem('vexLoggedInUser');
+    if (loggedInUser) saveUserData(loggedInUser);
+  }
+});
+
+listToggleBtn.addEventListener('click', () => {
+  currentList = currentList === 'skills' ? 'teamwork' : 'skills';
+  listToggleBtn.textContent = currentList.charAt(0).toUpperCase() + currentList.slice(1);
+});
+
+const latestScoreElem = document.getElementById('latest-score');
+const bestTeamworkElem = document.getElementById('best-teamwork');
+const bestSkillsElem = document.getElementById('best-skills');
+
+function formatScoreWithCount(score) {
+  if (score === null) return 'No scores saved yet.';
+  return score === 1 ? `${score} pt` : `${score} pts`;
+}
+
+function updateDashboardCards() {
+  let latestScore = null;
+  const lastSkills = skillsScores.length ? skillsScores[skillsScores.length - 1] : null;
+  const lastTeamwork = teamworkScores.length ? teamworkScores[teamworkScores.length - 1] : null;
+  if (lastSkills !== null && lastTeamwork !== null) {
+    latestScore = lastSkills > lastTeamwork ? lastSkills : lastTeamwork;
+  } else {
+    latestScore = lastSkills || lastTeamwork;
+  }
+  latestScoreElem.textContent = latestScore !== null ? formatScoreWithCount(latestScore) : 'No recent score.';
+  bestTeamworkElem.textContent = teamworkScores.length ? formatScoreWithCount(Math.max(...teamworkScores)) : 'No score saved yet.';
+  bestSkillsElem.textContent = skillsScores.length ? formatScoreWithCount(Math.max(...skillsScores)) : 'No score saved yet.';
+}
+
+updateScoreLists();
+updateDashboardCards();
+
+// --- Timer Logic (Countdown) ---
+const timerDisplay = document.getElementById('timer-display');
+const startBtn = document.getElementById('start-btn');
+const pauseBtn = document.getElementById('pause-btn');
+const resetBtn = document.getElementById('reset-btn');
+
+let timerInterval = null;
+let timerRunning = false;
+let timerSeconds = 60;
+
+function formatTime(s) {
+  const mins = Math.floor(s / 60);
+  const secs = s % 60;
+  return `${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+}
+
+function updateTimerDisplay() {
+  timerDisplay.textContent = formatTime(timerSeconds);
+}
+
+startBtn.addEventListener('click', () => {
+  if (timerRunning) return;
+  timerRunning = true;
+  pauseBtn.disabled = false;
+  timerInterval = setInterval(() => {
+    if (timerSeconds > 0) {
+      timerSeconds--;
+      updateTimerDisplay();
+    } else {
+      clearInterval(timerInterval);
+      timerRunning = false;
     }
-    setInterval(rotateTips, 4000);
-    rotateTips();
+  }, 1000);
+});
 
-    // Score handling placeholders
-    const recentEl = document.getElementById('recent-score');
-    const skillsEl = document.getElementById('best-skills');
-    const teamworkEl = document.getElementById('best-teamwork');
+pauseBtn.addEventListener('click', () => {
+  if (!timerRunning) return;
+  clearInterval(timerInterval);
+  timerRunning = false;
+});
 
-    function loadDashboardScores() {
-      const skills = JSON.parse(localStorage.getItem('skills') || '[]');
-      const teamwork = JSON.parse(localStorage.getItem('teamwork') || '[]');
+resetBtn.addEventListener('click', () => {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerSeconds = 60;
+  updateTimerDisplay();
+  pauseBtn.disabled = true;
+});
 
-      skillsEl.textContent = skills.length ? Math.max(...skills.map(s => s.score)) + " pts" : "—";
-      teamworkEl.textContent = teamwork.length ? Math.max(...teamwork.map(s => s.score)) + " pts" : "—";
+window.addEventListener('beforeunload', () => {
+  const loggedInUser = sessionStorage.getItem('vexLoggedInUser');
+  if (loggedInUser) saveUserData(loggedInUser);
+});
 
-      const all = [...skills, ...teamwork];
-      recentEl.textContent = all.length ? all[all.length - 1].score + " pts" : "—";
+updateTimerDisplay();
+checkLogin();
+switchTab('dashboard');
+</script>
 
-      renderScoreList('skills', skills);
-      renderScoreList('teamwork', teamwork);
-    }
 
-    function renderScoreList(type, scores) {
-      const ul = document.getElementById(`${type}-list`);
-      ul.innerHTML = '';
-      if (!scores.length) {
-        ul.innerHTML = '<li>No scores saved.</li>';
-        return;
-      }
-      scores.sort((a, b) => b.score - a.score);
-      scores.forEach((s, i) => {
-        const li = document.createElement('li');
-        li.textContent = `${i + 1}. ${s.score} pts`;
-        if (i === 0) li.classList.add('gold');
-        else if (i === 1) li.classList.add('silver');
-        else if (i === 2) li.classList.add('bronze');
-        ul.appendChild(li);
-      });
-    }
-
-    loadDashboardScores();
-  </script>
 </body>
 </html>
+
